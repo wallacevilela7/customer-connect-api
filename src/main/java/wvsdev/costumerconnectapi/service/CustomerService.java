@@ -7,9 +7,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import wvsdev.costumerconnectapi.controller.CustomerController;
 import wvsdev.costumerconnectapi.controller.dto.CreateUserDto;
+import wvsdev.costumerconnectapi.controller.dto.UpdateCustomerDto;
 import wvsdev.costumerconnectapi.entity.CustomerEntity;
 import wvsdev.costumerconnectapi.repository.CustomerRepository;
 
+import java.util.Optional;
+
+import static io.micrometer.common.util.StringUtils.isEmpty;
 import static org.springframework.util.StringUtils.hasText;
 
 @Service
@@ -37,15 +41,15 @@ public class CustomerService {
     }
 
     private Page<CustomerEntity> findWithFilter(String email, String cpf, PageRequest pageRequest) {
-        if(hasText(cpf)){
+        if (hasText(cpf)) {
             return repository.findByCpf(cpf, pageRequest);
         }
 
-        if (hasText(email)){
+        if (hasText(email)) {
             return repository.findByEmail(email, pageRequest);
         }
 
-        if(hasText(cpf) && hasText(email)){
+        if (hasText(cpf) && hasText(email)) {
             return repository.findByCpfAndEmail(cpf, email, pageRequest);
         }
 
@@ -59,5 +63,45 @@ public class CustomerService {
         }
 
         return PageRequest.of(page, pageSize, direction, "createdAt");
+    }
+
+    public Optional<CustomerEntity> findById(Long customerId) {
+        return repository.findById(customerId);
+    }
+
+    public Optional<CustomerEntity> updateById(Long customerId, UpdateCustomerDto data) {
+        var customer = repository.findById(customerId);
+
+        if (customer.isPresent()) {
+
+            updateFields(data, customer);
+            repository.save(customer.get());
+        }
+
+        return customer;
+    }
+
+    private void updateFields(UpdateCustomerDto data, Optional<CustomerEntity> customer) {
+        if (hasText(data.fullName())) {
+            customer.get().setFullName(data.fullName());
+        }
+
+        if (hasText(data.email())) {
+            customer.get().setEmail(data.email());
+        }
+
+        if (hasText(data.phoneNumber())) {
+            customer.get().setPhoneNumber(data.phoneNumber());
+        }
+    }
+
+    public boolean deleteById(Long customerId) {
+        var exists = repository.existsById(customerId);
+
+        if(exists){
+            repository.deleteById(customerId);
+        }
+
+        return exists;
     }
 }

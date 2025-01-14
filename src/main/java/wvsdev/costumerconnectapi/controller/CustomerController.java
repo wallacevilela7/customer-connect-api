@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.*;
 import wvsdev.costumerconnectapi.controller.dto.ApiResponse;
 import wvsdev.costumerconnectapi.controller.dto.CreateUserDto;
 import wvsdev.costumerconnectapi.controller.dto.PaginationResponse;
+import wvsdev.costumerconnectapi.controller.dto.UpdateCustomerDto;
 import wvsdev.costumerconnectapi.entity.CustomerEntity;
 import wvsdev.costumerconnectapi.service.CustomerService;
 
@@ -43,5 +44,33 @@ public class CustomerController {
                             pageResponse.getTotalPages()
                     )
             ));
+    }
+
+    @GetMapping(path = "/{customerId}")
+    public ResponseEntity<CustomerEntity> findById(@PathVariable("customerId") Long customerId){
+        var customer = service.findById(customerId);
+
+        return customer.isPresent() ?
+                ResponseEntity.ok(customer.get()) :
+                ResponseEntity.notFound().build();
+    }
+
+    @PutMapping(path = "/{customerId}")
+    public ResponseEntity<CustomerEntity> updateById(@PathVariable("customerId") Long customerId,
+                                                     @RequestBody UpdateCustomerDto data){
+        var customer = service.updateById(customerId, data);
+
+        return customer.isPresent() ?
+                ResponseEntity.noContent().build() :
+                ResponseEntity.notFound().build();
+    }
+
+    @DeleteMapping(path = "/{customerId}")
+    public ResponseEntity<Void> deleteById(@PathVariable("customerId") Long customerId){
+        boolean deleted = service.deleteById(customerId);
+
+        return deleted ?
+                ResponseEntity.noContent().build() :
+                ResponseEntity.notFound().build();
     }
 }
